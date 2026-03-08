@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TaskFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+
+<div id="app" class="app">
+
+    <!-- ───── Sidebar ───── -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect width="9" height="9" rx="2" fill="#3b82f6"/>
+                <rect x="11" width="9" height="9" rx="2" fill="#3b82f6" opacity=".5"/>
+                <rect y="11" width="9" height="9" rx="2" fill="#3b82f6" opacity=".5"/>
+                <rect x="11" y="11" width="9" height="9" rx="2" fill="#3b82f6" opacity=".25"/>
+            </svg>
+            <span>TaskFlow</span>
+        </div>
+
+        <button class="sidebar-cmd-btn" onclick="App.toggleCommandPalette()" title="Ctrl + K">
+            <span>Search or command…</span>
+            <kbd>⌘K</kbd>
+        </button>
+
+        <nav class="sidebar-nav">
+            <div class="sidebar-section-label">Projects</div>
+            <ul id="project-list" class="sidebar-project-list"></ul>
+            <button class="sidebar-add-btn" onclick="App.showNewProjectModal()">+ New Project</button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button onclick="App.showShortcuts()" class="sidebar-shortcuts-btn" title="Keyboard shortcuts">
+                <span>⌨</span> Shortcuts
+            </button>
+        </div>
+    </aside>
+
+    <!-- ───── Main Content ───── -->
+    <main class="main">
+        <header class="toolbar">
+            <div class="toolbar-left">
+                <h2 class="toolbar-title" id="toolbar-title">Select a project</h2>
+                <div class="view-switcher" id="view-switcher" style="display:none;">
+                    <button class="view-btn active" data-view="board" onclick="App.setView('board')">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="4" height="14" rx="1"/><rect x="5" width="4" height="10" rx="1"/><rect x="10" width="4" height="12" rx="1"/></svg>
+                        Board
+                    </button>
+                    <button class="view-btn" data-view="list" onclick="App.setView('list')">
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect width="14" height="2.5" rx="1"/><rect y="4" width="14" height="2.5" rx="1"/><rect y="8" width="14" height="2.5" rx="1"/><rect y="11.5" width="10" height="2.5" rx="1"/></svg>
+                        List
+                    </button>
+                </div>
+            </div>
+            <div class="toolbar-right" id="toolbar-actions" style="display:none;">
+                <div class="filter-group">
+                    <select id="filter-priority" class="filter-select" onchange="App.applyFilters()">
+                        <option value="">All priorities</option>
+                        <option value="4">Urgent</option>
+                        <option value="3">High</option>
+                        <option value="2">Medium</option>
+                        <option value="1">Low</option>
+                        <option value="0">None</option>
+                    </select>
+                    <input type="text" id="filter-search" class="filter-input" placeholder="Filter tasks…" oninput="App.applyFilters()" />
+                </div>
+                <button class="btn btn-primary" onclick="App.showNewTaskModal()">
+                    + New Task
+                </button>
+            </div>
+        </header>
+
+        <div class="content" id="content">
+            <div class="empty-state" id="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#ccc" stroke-width="1.5">
+                        <rect x="4" y="4" width="16" height="40" rx="3"/><rect x="24" y="4" width="16" height="28" rx="3"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="18" x2="16" y2="18"/>
+                        <line x1="28" y1="12" x2="36" y2="12"/><line x1="28" y1="18" x2="36" y2="18"/>
+                    </svg>
+                </div>
+                <p>Select a project or create a new one to get started.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- ───── Task Detail Panel ───── -->
+    <div class="panel-overlay" id="panel-overlay" onclick="App.closeTaskPanel()"></div>
+    <aside class="task-panel" id="task-panel">
+        <div class="panel-header">
+            <span class="panel-task-number" id="panel-task-number"></span>
+            <div class="panel-header-actions">
+                <button class="icon-btn" onclick="App.deleteCurrentTask()" title="Delete task">🗑</button>
+                <button class="icon-btn" onclick="App.closeTaskPanel()" title="Close">✕</button>
+            </div>
+        </div>
+        <div class="panel-body" id="panel-body"></div>
+    </aside>
+
+    <!-- ───── Command Palette ───── -->
+    <div class="command-overlay" id="command-overlay" onclick="App.toggleCommandPalette()"></div>
+    <div class="command-palette" id="command-palette">
+        <input type="text" class="command-input" id="command-input"
+               placeholder="Type a command or search…"
+               oninput="App.filterCommands(this.value)" />
+        <ul class="command-list" id="command-list"></ul>
+    </div>
+
+    <!-- ───── Modal ───── -->
+    <div class="modal-overlay" id="modal-overlay" onclick="App.closeModal()"></div>
+    <div class="modal" id="modal">
+        <div class="modal-header">
+            <h3 id="modal-title"></h3>
+            <button class="icon-btn" onclick="App.closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+    </div>
+
+    <!-- ───── Timer Widget ───── -->
+    <div class="timer-widget" id="timer-widget" style="display:none;">
+        <span class="timer-task" id="timer-task-label"></span>
+        <span class="timer-display" id="timer-display">00:00</span>
+        <button class="timer-stop-btn" onclick="App.stopTimer()">■ Stop</button>
+    </div>
+
+</div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
